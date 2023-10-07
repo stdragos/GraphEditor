@@ -198,8 +198,6 @@ public class Panel extends JPanel {
             g.drawLine(this.pointStart.x, this.pointStart.y, this.pointEnd.x, this.pointEnd.y);
         }
 
-        Integer a;
-
         if(isDraggingNode) {
 
 

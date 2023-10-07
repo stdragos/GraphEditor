@@ -46,6 +46,7 @@ public class Edge {
                 Polygon arrowHead = new Polygon();
                 arrowHead.addPoint( 0, 5);
                 arrowHead.addPoint( -7,  -37);
+                arrowHead.addPoint( 0,  -27);
                 arrowHead.addPoint(  7, -37);
 
                 tx.setToIdentity();
