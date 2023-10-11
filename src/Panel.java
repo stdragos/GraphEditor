@@ -19,22 +19,27 @@ public class Panel extends JPanel {
 
     private boolean directedUndirectedGraph = false; // false == undirected
     private List<List<Integer>> adjacencyMatrix = new ArrayList<>();
-    private int currentAdjacencyRow = 0;
+    private int currentAdjacencySize = 0;
     Point pointStart = null;
     Point pointEnd = null;
     boolean isDragging = false;
 
     boolean isDraggingNode = false;
     Node whichNodeIsMoving;
+
+    private double calculateDistance(Point a, Point b) {
+        return Point2D.distance(a.getX(), a.getY(), b.getX(), b.getY());
+    }
+
     private void writeMatrix(List<List<Integer>> matrix){
 
         try{
             BufferedWriter bw = new BufferedWriter(new FileWriter("AdjacencyMatrix.txt"));
             bw.write("There are " + nodesList.size() + " nodes.\n");
-            for(int i = 0; i < this.currentAdjacencyRow; ++i) {
-                for (int j = 0; j < this.currentAdjacencyRow; ++j)
-                    bw.write(this.adjacencyMatrix.get(i).get(j) + " ");
-                bw.newLine();
+            for(var row : matrix){
+                for(var element : row)
+                    bw.write(element + " ");
+                bw.write('\n');
             }
             bw.flush();
         } catch (IOException e) {
@@ -48,7 +53,8 @@ public class Panel extends JPanel {
         modeButton.setBounds(50,100,95,30);
         modeButton.setFont(new Font("Arial", Font.PLAIN, 20));
         this.add(modeButton);
-
+        Panel.this.setFocusable(true);
+        Panel.this.requestFocusInWindow();
         modeButton.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 if(!directedUndirectedGraph) {
@@ -59,10 +65,12 @@ public class Panel extends JPanel {
                     modeButton.setText("Currently being in undirected graph mode");
                     directedUndirectedGraph = false;
                 }
+                Panel.this.setFocusable(true);
+                Panel.this.requestFocus();
             }
         });
 
-        JButton resetButton = new JButton("Reset graph.");
+        JButton resetButton = new JButton("Reset graph");
         resetButton.setBounds(50,40,40,30);
         resetButton.setFont(new Font("Arial", Font.PLAIN, 20));
         this.add(resetButton);
@@ -72,7 +80,7 @@ public class Panel extends JPanel {
                 Panel.this.nodeNo = 1;
                 Panel.this.nodesList.clear();
                 Panel.this.edgesList.clear();
-                Panel.this.currentAdjacencyRow = 0;
+                Panel.this.currentAdjacencySize = 0;
                 Panel.this.pointStart = null;
                 Panel.this.pointEnd = null;
                 Panel.this.isDragging = false;
@@ -80,15 +88,23 @@ public class Panel extends JPanel {
                 Panel.this.adjacencyMatrix.clear();
                 Panel.this.repaint();
                 Panel.this.writeMatrix(Panel.this.adjacencyMatrix);
+                Panel.this.setFocusable(true);
+                Panel.this.requestFocusInWindow();
             }
         });
 
+
+
         this.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
+                Panel.this.setFocusable(true);
+                Panel.this.requestFocusInWindow();
                 Panel.this.pointStart = e.getPoint();
             }
 
             public void mouseReleased(MouseEvent e) {
+                Panel.this.setFocusable(true);
+                Panel.this.requestFocusInWindow();
                 if (!Panel.this.isDragging) {
                         Panel.this.addNode(e.getX(), e.getY());
                     }
@@ -102,7 +118,7 @@ public class Panel extends JPanel {
                          Point start = new Point(), end = new Point();
 
                          for (Node node : Panel.this.nodesList) {
-                             if (Point2D.distance(Panel.this.pointStart.getX(), Panel.this.pointStart.getY(), node.getCoordX(), node.getCoordY()) < 30) {
+                             if (Point2D.distance(Panel.this.pointStart.getX(), Panel.this.pointStart.getY(), node.getCoordX(), node.getCoordY()) < 40) {
                                  fromNode = true;
                                  start.setLocation(node.getCoordX() + 15, node.getCoordY() + 15);
                                  node1No = node.getNumber() - 1;
@@ -110,22 +126,50 @@ public class Panel extends JPanel {
                          }
 
                          for (Node node : Panel.this.nodesList) {
-                             if (node.getNumber() != node1No + 1 && Point2D.distance(Panel.this.pointEnd.getX(), Panel.this.pointEnd.getY(), node.getCoordX(), node.getCoordY()) < 30) {
+                             if (node.getNumber() != node1No + 1 && Point2D.distance(Panel.this.pointEnd.getX(), Panel.this.pointEnd.getY(), node.getCoordX(), node.getCoordY()) < 40) {
                                  toNode = true;
                                  end.setLocation(node.getCoordX() + 15, node.getCoordY() + 15);
                                  node2No = node.getNumber() - 1;
                              }
                          }
                          if (fromNode && toNode && start.getX() != end.getX() && start.getY() != end.getY()) {
-                             Edge edge = new Edge(start, end, directedUndirectedGraph);
-                             Panel.this.edgesList.add(edge);
-                             //verificare daca este orientat sau nu
-                             //if(orientat...)
-                             if (!directedUndirectedGraph) {
-                                 Panel.this.adjacencyMatrix.get(node1No).set(node2No, 1);
-                                 Panel.this.adjacencyMatrix.get(node2No).set(node1No, 1);
-                             } else {
-                                 Panel.this.adjacencyMatrix.get(node1No).set(node2No, 1);
+                            //verificare daca exista muchie deja
+                             Edge whichEdgeToRemove = null;
+
+                             for(var edg : edgesList) {
+                                 if(start.x == edg.getStart().x && start.y == edg.getStart().y &&
+                                 end.x == edg.getEnd().x && end.y == edg.getEnd().y) {
+                                     whichEdgeToRemove = edg;
+                                     break;
+                                 }
+                                 if(!edg.isDirected() && start.x == edg.getEnd().x && start.y == edg.getEnd().y &&
+                                         end.x == edg.getStart().x && end.y == edg.getStart().y) {
+                                     whichEdgeToRemove = edg;
+                                     break;
+                                 }
+                             }
+
+                             if(whichEdgeToRemove == null)
+                             {
+                                 Edge edge = new Edge(start, end, directedUndirectedGraph);
+                                 Panel.this.edgesList.add(edge);
+                                 //verificare daca este orientat sau nu
+                                 //if(orientat...)
+                                 if (!directedUndirectedGraph) {
+                                     Panel.this.adjacencyMatrix.get(node1No).set(node2No, 1);
+                                     Panel.this.adjacencyMatrix.get(node2No).set(node1No, 1);
+                                 } else {
+                                     Panel.this.adjacencyMatrix.get(node1No).set(node2No, 1);
+                                 }
+                             }
+                             else {
+                                 edgesList.remove(whichEdgeToRemove);
+                                 if (!directedUndirectedGraph) {
+                                     Panel.this.adjacencyMatrix.get(node1No).set(node2No, 0);
+                                     Panel.this.adjacencyMatrix.get(node2No).set(node1No, 0);
+                                 } else {
+                                     Panel.this.adjacencyMatrix.get(node1No).set(node2No, 0);
+                                 }
                              }
                          }
                          Panel.this.writeMatrix(Panel.this.adjacencyMatrix);
@@ -139,17 +183,103 @@ public class Panel extends JPanel {
         this.addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseDragged(MouseEvent e) {
                 Panel.this.pointEnd = e.getPoint();
+                Panel.this.setFocusable(true);
+                Panel.this.requestFocusInWindow();
 
-                for(var node : Panel.this.nodesList)
-                    if(Point2D.distance(e.getPoint().getX(), e.getPoint().getY(), node.getCoordX(), node.getCoordY()) < 8)
-                    {
-                        Panel.this.isDraggingNode = true;
-                        Panel.this.whichNodeIsMoving = node;
-                        break;
+                if(!Panel.this.isDraggingNode) {
+                    //check first if not drawing an edge from a node
+                    boolean drawingGoodEdge = false;
+                    for (Node node : Panel.this.nodesList) {
+                        if (calculateDistance(Panel.this.pointStart, new Point(node.getCoordX() + 15, node.getCoordY()+15)) < 20) {
+                            drawingGoodEdge = true;
+                        }
                     }
+
+                    if(!drawingGoodEdge)
+                    for (var node : Panel.this.nodesList)
+                        if (calculateDistance(e.getPoint(), node.getPoint()) < 10) {
+                            Panel.this.isDraggingNode = true;
+                            Panel.this.whichNodeIsMoving = node;
+                            break;
+                        }
+                }
 
                 Panel.this.isDragging = true;
                 Panel.this.repaint();
+            }
+        });
+
+        //delete a node
+        this.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if(e.getKeyChar() == 'e' || e.getKeyChar() == 'E')
+                {
+                    Point mouse = MouseInfo.getPointerInfo().getLocation();
+                    Node nodeToDelete = null;
+                    //verify if mouse pointer is on a node
+                    for(var node : Panel.this.nodesList) {
+
+                        if(calculateDistance(new Point(node.getPoint().x + 25, node.getPoint().y + 25), mouse) <= 30) {
+                            nodeToDelete = node;
+                            break;
+                        }
+                    }
+                    if(nodeToDelete != null) {
+                        List<List<Integer>> newMatrix = new ArrayList<>();
+                        List<Integer> row = new ArrayList<>();
+                        for(int i = 0; i < Panel.this.currentAdjacencySize - 1; ++i) {
+                            row = new ArrayList<>();
+                            for (int j = 0; j < Panel.this.currentAdjacencySize - 1; ++j)
+                                row.add(j, 0);
+                            newMatrix.add(i, row);
+                        }
+
+                        //adjacency matrix update
+                        int currentI = 0, currentJ = 0;
+                        for(int i = 0; i < Panel.this.currentAdjacencySize; ++i) {
+                            if(i != nodeToDelete.getNumber() - 1) {
+                                for (int j = 0; j < Panel.this.currentAdjacencySize; ++j)
+                                    if (j != nodeToDelete.getNumber() - 1) {
+                                        newMatrix.get(currentI).set(currentJ, Panel.this.adjacencyMatrix.get(i).get(j));
+                                        ++currentJ;
+                                    }
+                                ++currentI;
+                                currentJ = 0;
+                            }
+                        }
+
+                        Panel.this.adjacencyMatrix.clear();
+                        Panel.this.adjacencyMatrix = newMatrix;
+
+
+                        --Panel.this.nodeNo;
+                        --Panel.this.currentAdjacencySize;
+
+
+                        //remove edges from this node
+                        for(int i = 0; i < Panel.this.edgesList.size(); ++i) {
+                            Edge edge = Panel.this.edgesList.get(i);
+                            if(calculateDistance(new Point(edge.getStart().x - 15, edge.getStart().y - 15), nodeToDelete.getPoint()) < 30) {
+                                Panel.this.edgesList.remove(edge);
+                                --i;
+                            }
+                            else if (calculateDistance(new Point(edge.getEnd().x - 15, edge.getEnd().y - 15), nodeToDelete.getPoint()) < 30) {
+                                Panel.this.edgesList.remove(edge);
+                                --i;
+                            }
+                        }
+                        Panel.this.nodesList.remove(nodeToDelete);
+                        for(int i = 0;i < Panel.this.nodesList.size();++i) {
+                            if(Panel.this.nodesList.get(i).getNumber() == i + 2)
+                                Panel.this.nodesList.get(i).setNumber(i + 1);
+                        }
+
+                        writeMatrix(adjacencyMatrix);
+                        Panel.this.repaint();
+                    }
+
+                }
             }
         });
     }
@@ -158,8 +288,9 @@ public class Panel extends JPanel {
 
         boolean canAddNode = true;
         for(Node node : this.nodesList)
-            if(Point2D.distance(x-10, y-10, node.getCoordX(), node.getCoordY()) < 60)
+            if(calculateDistance(new Point(x-10, y-10), node.getPoint()) < 60)
                 canAddNode = false;
+
         if(canAddNode) {
             Node node = new Node(x - 10, y - 10, this.nodeNo);
             this.nodesList.add(node);
@@ -168,21 +299,21 @@ public class Panel extends JPanel {
 
             //updatare matrice adiacenta
             List<Integer> row = new ArrayList<>();
-            Panel.this.adjacencyMatrix.add(currentAdjacencyRow, row);
-            for(int j = 0; j <= currentAdjacencyRow; ++j)
+            Panel.this.adjacencyMatrix.add(currentAdjacencySize, row);
+            for(int j = 0; j <= currentAdjacencySize; ++j)
                 row.add(j, 0);
-            for(int i = 0; i < currentAdjacencyRow; ++i)
-                Panel.this.adjacencyMatrix.get(i).add(currentAdjacencyRow, 0);
+            for(int i = 0; i < currentAdjacencySize; ++i)
+                Panel.this.adjacencyMatrix.get(i).add(currentAdjacencySize, 0);
 
-            ++this.currentAdjacencyRow;
+            ++this.currentAdjacencySize;
             this.writeMatrix(Panel.this.adjacencyMatrix);
         }
     }
 
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawString("This is my Graph!", 10, 20);
-
+        Panel.this.setFocusable(true);
+        Panel.this.requestFocusInWindow();
         Iterator var3 = this.edgesList.iterator();
 
         while(var3.hasNext()) {
@@ -204,7 +335,7 @@ public class Panel extends JPanel {
             boolean movingIntoANode = false;
 
             for(Node node : this.nodesList)
-                if(node.getNumber() != Panel.this.whichNodeIsMoving.getNumber() && Point2D.distance(this.pointEnd.x, this.pointEnd.y, node.getCoordX(), node.getCoordY()) < 60)
+                if(node.getNumber() != Panel.this.whichNodeIsMoving.getNumber() && calculateDistance(this.pointEnd, node.getPoint()) < 60)
                     movingIntoANode = true;
 
             if(!movingIntoANode) {
@@ -213,10 +344,10 @@ public class Panel extends JPanel {
                 for (var edge : Panel.this.edgesList) {
                     Point start = edge.getStart();
                     Point end = edge.getEnd();
-                    if (Point2D.distance(start.getX() - 15, start.getY() - 15, whichNodeIsMoving.getCoordX(), whichNodeIsMoving.getCoordY()) <= 30) {
+                    if (calculateDistance(new Point(start.x - 15, start.y - 15), whichNodeIsMoving.getPoint()) <= 30) {
                         edge.setStartX(this.pointEnd.x + 15);
                         edge.setStartY(this.pointEnd.y + 15);
-                    } else if (Point2D.distance(end.getX() - 15, end.getY() - 15, whichNodeIsMoving.getCoordX(), whichNodeIsMoving.getCoordY()) <= 30) {
+                    } else if (calculateDistance(new Point(end.x - 15, end.y - 15), whichNodeIsMoving.getPoint()) <= 30) {
                         edge.setEndX(this.pointEnd.x + 15);
                         edge.setEndY(this.pointEnd.y + 15);
                     }

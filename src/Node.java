@@ -35,16 +35,20 @@ public class Node {
         return this.number;
     }
 
+    public Point getPoint() {
+        return new Point(this.coordX, this.coordY);
+    }
+
     public void drawNode(Graphics g, int node_diam) {
-        g.setColor(Color.red);
-        Font font = new Font("TimesRoman", Font.BOLD, 15);
+        g.setColor(Color.ORANGE);
+        Font font = new Font("Arial", Font.BOLD, 15);
         g.setFont(font);
         g.fillOval(coordX, coordY, node_diam, node_diam);
         g.setColor(Color.black);
         g.drawOval(coordX, coordY, node_diam, node_diam);
-        g.setColor(Color.white);
+        g.setColor(Color.black);
         if(this.number < 10)
-            g.drawString(((Integer)this.number).toString(), coordX+13, coordY + 20);
+            g.drawString(((Integer)this.number).toString(), coordX+12, coordY + 20);
         else
             g.drawString(((Integer)this.number).toString(), coordX+8, coordY + 20);
     }
