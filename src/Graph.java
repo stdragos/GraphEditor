@@ -10,6 +10,8 @@ public class Graph {
         frame.add(new Panel());
         frame.setSize(1000,600);
         frame.setVisible(true);
+        frame.setFocusable(true);
+        frame.requestFocusInWindow();
 
     }
 

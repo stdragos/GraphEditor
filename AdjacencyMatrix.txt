@@ -1,4 +1,1 @@
-There are 3 nodes.
-0 1 1 
-1 0 1 
-1 1 0 
+There are 0 nodes.

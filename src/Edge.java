@@ -36,6 +36,9 @@ public class Edge {
         this.end.y = coord;
     }
 
+    public boolean isDirected() {
+        return this.directed;
+    }
     public void drawEdge(Graphics g) {
         if(this.start != null) {
             if(directed) {
@@ -57,7 +60,7 @@ public class Edge {
                 Graphics2D g2d = (Graphics2D)g.create();
                 g2d.setTransform(tx);
                 g2d.fill(arrowHead);
-                //g2d.dispose();
+
             }
             else {
                 g.setColor(Color.RED);
