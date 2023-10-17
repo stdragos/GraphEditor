@@ -5,16 +5,34 @@ import java.lang.Object;
 public class Edge {
     private Point start;
     private Point end;
+
+    private Node startNode;
+    private Node endNode;
+
+
     private boolean directed = false;
-    public Edge(Point start, Point end, boolean directed) {
+    public Edge(Point start, Point end, boolean directed, Node startNode, Node endNode) {
         this.start = start;
         this.end = end;
         this.directed = directed;
+
+        this.startNode = startNode;
+        this.endNode = endNode;
     }
 
+    public Node getStartNode() {
+        return this.startNode;
+    }
 
+    public Node getEndNode() {
+        return this.endNode;
+    }
     public Point getStart() {
         return start;
+    }
+
+    public void setDirectedUndirected(boolean x) {
+        this.directed = x;
     }
 
     public Point getEnd() {
@@ -47,12 +65,11 @@ public class Edge {
                 g.setColor(Color.BLUE);
                 AffineTransform tx = new AffineTransform();
                 Polygon arrowHead = new Polygon();
-                arrowHead.addPoint( 0, 5);
-                arrowHead.addPoint( -7,  -37);
-                arrowHead.addPoint( 0,  -27);
-                arrowHead.addPoint(  7, -37);
+                arrowHead.addPoint( 0, 5 - 20);
+                arrowHead.addPoint( -7,  -17 - 20);
+                arrowHead.addPoint( 0,  -7- 20);
+                arrowHead.addPoint(  7, -17 - 20);
 
-                tx.setToIdentity();
                 double angle = Math.atan2(this.end.y-this.start.y, this.end.x-this.start.x);
                 tx.translate(this.end.x, this.end.y);
                 tx.rotate((angle-Math.PI/2d));
